@@ -9,7 +9,7 @@
 			</h4>
 		</div>
 		<div id="product_tab_{$tab.id}" class="panel-collapse collapse">
-			<div class="panel-body">{$tab.content}</div>
+			<div class="panel-body">{$tab.content|unescape:"html"}</div>
 		</div>
 	</div>
 

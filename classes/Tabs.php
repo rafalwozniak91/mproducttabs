@@ -63,4 +63,9 @@ class Tabs extends ObjectModel
 
     }
 
+    public static function getTabIdByName($name) {
+
+        return Db::getInstance()->getValue('SELECT id FROM `' . _DB_PREFIX_ . 'mproducttabs` WHERE name = "'. $name .'"');
+    }
+
 }

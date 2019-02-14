@@ -64,6 +64,9 @@ class Mproducttabs extends Module
      */
     public function install()
     {
+        Configuration::updateValue('MPRODUCTS_PTS_TABS', false);
+        Configuration::updateValue('MPRODUCTS_PTS_LIMIT', 500);
+        Configuration::updateValue('MPRODUCTS_PTS_OFFSET_LIMIT', 0);
 
         include(dirname(__FILE__).'/sql/install.php');
 
@@ -92,7 +95,8 @@ class Mproducttabs extends Module
          * If values have been submitted in the form, process.
          */
 
-        $output = '';
+
+        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
         if (((bool)Tools::isSubmit('submitMproducttabsModule'))) {
             $output .= $this->postProcess();
@@ -106,26 +110,34 @@ class Mproducttabs extends Module
             $tab = new Tabs((int)$id);
             $tab->name = $name;
             if($tab->save()) 
-               $output .= $this->displayConfirmation($this->l('Tab has been updated')); 
+             $output .= $this->displayConfirmation($this->l('Tab has been updated')); 
 
-        }
+     }
 
-        if(Tools::getIsset('deletemproducttabs')) {
-            
-            $id = Tools::getValue('id');
-            $tab = new Tabs((int)$id);
-            $tab->delete();
+     if(Tools::getIsset('deletemproducttabs')) {
 
-        }
+        $id = Tools::getValue('id');
+        $tab = new Tabs((int)$id);
+        $tab->delete();
 
-        if(Tools::getIsset('updatemproducttabs')){
-            $output .= $this->renderEditForm();
-        } else {
-            $output .= $this->renderForm();
-        }
-
-        return $output.$this->tabsList();
     }
+
+    if((bool)Tools::isSubmit('rewriteMproducttabsModule')) {
+        $this->submitRewriteTabs();
+    }
+
+    if(Tools::getIsset('updatemproducttabs')){
+        $output .= $this->renderEditForm();
+    } else {
+        $output .= $this->renderForm();
+    }
+
+    return $output.$this->tabsList().$this->confimrUpdatedTabs().$this->renderPtsForm();
+}
+
+
+
+
 
     /**
      * Create the form that will be displayed in the configuration of your module.
@@ -158,12 +170,9 @@ class Mproducttabs extends Module
 
     protected function renderEditForm()
     {
-        
+
         $id = Tools::getValue('id');
         $tab = new Tabs((int)$id);
-
-        $fields = [
-        ];
 
         $fields_values = [
             'MPRODUCTTABS_TAB_ID' => $tab->id,
@@ -376,9 +385,9 @@ class Mproducttabs extends Module
 
     public function getProductTabsGroups($id_product) {
 
-     $tabs = (object)Tabs::getProductTabs((int)$id_product);
+       $tabs = (object)Tabs::getProductTabs((int)$id_product);
 
-     foreach ($tabs as &$tab) {
+       foreach ($tabs as &$tab) {
 
         $tab['content'] = TabsContent::getProductTabContent($tab['id'], (int)$id_product);
 
@@ -436,5 +445,170 @@ public function tabsList()
     return $helper->generateList($tabs, $fields_list);
 
 }
+
+    /**
+     * Create the form that will be displayed in the configuration of your module.
+     */
+    protected function renderPtsForm()
+    {
+        $helper = new HelperForm();
+
+        $fields_value = [
+            'MPRODUCTTABS_PTS' => ''
+        ];
+
+
+        $helper->show_toolbar = false;
+        $helper->table = $this->table;
+        $helper->module = $this;
+        $helper->default_form_language = $this->context->language->id;
+        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG', 0);
+
+        $helper->identifier = $this->identifier;
+        $helper->submit_action = 'rewriteMproducttabsModule';
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
+        .'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+
+        $helper->tpl_vars = array(
+            'fields_value' =>$fields_value, /* Add values for your inputs */
+            'languages' => $this->context->controller->getLanguages(),
+            'id_language' => $this->context->language->id,
+        );
+
+        return $helper->generateForm(array($this->getPtsConfigForm()));
+    }
+
+    /**
+     * Create the structure of your form.
+     */
+    protected function getPtsConfigForm()
+    {
+        return array(
+            'form' => array(
+                'legend' => array(
+                    'title' => $this->l('Rewrite pts tabs'),
+                    'icon' => 'icon-cogs',
+                ),
+                'input' => array(
+                    array(
+                        'type' => 'switch',
+                        'label' => $this->l('PTS tabs'),
+                        'name' => 'MPRODUCTTABS_PTS',
+                        'is_bool' => true,
+                        'desc' => $this->l('Do you want to rewrite pts tabs content?'),
+                        'values' => array(
+                            array(
+                                'id' => 'active_on',
+                                'value' => true,
+                                'label' => $this->l('Enabled')
+                            ),
+                            array(
+                                'id' => 'active_off',
+                                'value' => false,
+                                'label' => $this->l('Disabled')
+                            )
+                        ),
+                    ),
+                ),
+                'submit' => array(
+                    'title' => $this->l('Save'),
+                ),
+            ),
+        );
+    }
+
+
+    public function confimrUpdatedTabs() {
+
+        $id_lang = (int)$this->context->language->id;
+        $id_shop = (int)$this->context->shop->id;
+        $offset = Configuration::get('MPRODUCTS_PTS_OFFSET_LIMIT');
+        $ptsTabsCount = $this->getCountOfPtsTabs($id_lang, $id_shop);
+
+        if($offset) {
+            if($offset < $ptsTabsCount)
+                return $this->displayWarning(sprintf($this->l('Updated tabs: %1$d / %2$d'), $offset, $ptsTabsCount)); 
+
+            if($offset == $ptsTabsCount)
+                return $this->displayConfirmation(sprintf($this->l('Updated tabs: %1$d / %2$d'), $offset, $ptsTabsCount)); 
+        }
+
+    }
+
+    public function submitRewriteTabs() {
+
+        if(Tools::getValue('MPRODUCTTABS_PTS')) {
+
+            set_time_limit(0);
+
+            $id_lang = (int)$this->context->language->id;
+            $id_shop = (int)$this->context->shop->id;
+
+            $pts_tabs = $this->getPtsTabsNames($id_lang);
+
+            $pts_tabs_active = Configuration::get('MPRODUCTS_PTS_TABS');
+
+            if(!$pts_tabs_active) {
+
+                foreach ($pts_tabs as $pts_tab) {
+
+                    $tab = new Tabs();
+                    $tab->name = $pts_tab['name'];
+                    $tab->add();  
+
+                }
+            }
+
+            Configuration::updateValue('MPRODUCTS_PTS_TABS', true);
+
+            $limit = Configuration::get('MPRODUCTS_PTS_LIMIT');
+            $offset = Configuration::get('MPRODUCTS_PTS_OFFSET_LIMIT');
+            $totalTabs = $this->getCountOfPtsTabs($id_lang, $id_shop);
+
+            $pts_tabs_contents = $this->getPtsTabContent($id_lang, $id_shop, $limit, $offset);
+
+            foreach ($pts_tabs_contents as $pts_tab_content) {
+
+                if($offset <= $totalTabs ) {
+
+                    if(!empty($pts_tab_content['content'])) {
+                        $tabsContent = new TabsContent();
+                        $tabsContent->id_tab = (int)Tabs::getTabIdByName($pts_tab_content['name']);
+                        $tabsContent->id_product = $pts_tab_content['id_product'];
+                        $tabsContent->content = $pts_tab_content['content'];
+
+                        if($tabsContent->add()) {
+                            Configuration::updateValue('MPRODUCTS_PTS_OFFSET_LIMIT', Configuration::get('MPRODUCTS_PTS_OFFSET_LIMIT')+1);
+                        } 
+                    }
+                }
+            }  
+
+            
+        }
+
+    }
+
+    public function getPtsTabsNames($id_lang) {
+
+        return Db::getInstance()->executeS('SELECT id_tab, name FROM `'._DB_PREFIX_.'pet_tab_lang` WHERE id_lang ='.(int)$id_lang);
+    }
+
+    public function getPtsTabContent($id_lang, $id_shop, $limit, $offset) {
+
+        return Db::getInstance()->executeS('SELECT ptl.name ,ptcs.id_product, ptcl.content FROM `'._DB_PREFIX_.'pet_tab_content_lang` ptcl
+            LEFT JOIN `'._DB_PREFIX_.'pet_tab_content_shop` ptcs ON (ptcl.id_tab_content = ptcs.id_tab_content)
+            LEFT JOIN `'._DB_PREFIX_.'pet_tab_content` ptc ON (ptcs.id_tab_content = ptc.id_tab_content)
+            LEFT JOIN `'._DB_PREFIX_.'pet_tab_lang` ptl ON (ptc.id_tab = ptl.id_tab)
+            WHERE ptcl.id_lang = '.(int)$id_lang.' AND ptl.id_lang = ptcl.id_lang AND ptcl.id_shop = '.(int)$id_shop.' LIMIT '.(int)$limit.($offset ? ' OFFSET '.(int)$offset : ''));
+    }
+
+    public function getCountOfPtsTabs($id_lang, $id_shop) {
+
+        return Db::getInstance()->getValue('SELECT COUNT(ptcl.content) as total FROM `'._DB_PREFIX_.'pet_tab_content_lang` ptcl
+            WHERE ptcl.id_lang = '.(int)$id_lang.' AND ptcl.id_shop = '.(int)$id_shop);
+    }
+
 
 }
