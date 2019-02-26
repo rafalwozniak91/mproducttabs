@@ -552,11 +552,11 @@ public function tabsList()
             if(!$pts_tabs_active) {
 
                 foreach ($pts_tabs as $pts_tab) {
-
-                    $tab = new Tabs();
-                    $tab->name = $pts_tab['name'];
-                    $tab->add();  
-
+                    if(!empty($pts_tab['name'])) {
+                        $tab = new Tabs();
+                        $tab->name = $pts_tab['name'];
+                        $tab->add();  
+                    }
                 }
             }
 
@@ -572,7 +572,7 @@ public function tabsList()
 
                 if($offset <= $totalTabs ) {
 
-                    if(!empty($pts_tab_content['content'])) {
+                    if(!empty($pts_tab_content['content']) && Tabs::getTabIdByName($pts_tab_content['name'])) {
                         $tabsContent = new TabsContent();
                         $tabsContent->id_tab = (int)Tabs::getTabIdByName($pts_tab_content['name']);
                         $tabsContent->id_product = $pts_tab_content['id_product'];
