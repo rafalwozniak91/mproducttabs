@@ -12,7 +12,7 @@ class Tabs extends ObjectModel
 		'table' => 'mproducttabs',
 		'primary' => 'id',
 		'fields' => array(
-			'name' =>			array('type' => self::TYPE_STRING, 'validate' => 'isName', 'required' => true, 'size' => 255),
+			'name' =>			array('type' => self::TYPE_STRING, 'required' => true, 'size' => 255),
 		),
 		'associations' => array(
             'contents' =>             array('type' => self::HAS_MANY, 'field' => 'id_tab', 'object' => 'TabContents'),
