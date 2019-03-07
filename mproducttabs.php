@@ -577,6 +577,7 @@ class Mproducttabs extends Module
                     if(!empty($pts_tab['name'])) {
                         $tab = new Tabs();
                         $tab->name = $pts_tab['name'];
+                        $tab->position = Tabs::count();
                         $tab->add();  
                     }
                 }
