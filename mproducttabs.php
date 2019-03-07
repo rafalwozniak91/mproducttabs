@@ -39,7 +39,7 @@ class Mproducttabs extends Module
     {
         $this->name = 'mproducttabs';
         $this->tab = 'front_office_features';
-        $this->version = '1.0.0';
+        $this->version = '1.1.0';
         $this->author = 'Rafał Woźniak';
         $this->need_instance = 1;
 
@@ -109,6 +109,7 @@ class Mproducttabs extends Module
 
             $tab = new Tabs((int)$id);
             $tab->name = $name;
+
             if($tab->save()) 
              $output .= $this->displayConfirmation($this->l('Tab has been updated')); 
 
@@ -120,6 +121,9 @@ class Mproducttabs extends Module
         $tab = new Tabs((int)$id);
         $tab->delete();
 
+    }
+    if(Tools::getIsset('updatePositions')) {
+        echo $this->ajaxProcessUpdatePositions();
     }
 
     if((bool)Tools::isSubmit('rewriteMproducttabsModule')) {
@@ -134,9 +138,6 @@ class Mproducttabs extends Module
 
     return $output.$this->tabsList().$this->confimrUpdatedTabs().$this->renderPtsForm();
 }
-
-
-
 
 
     /**
@@ -282,6 +283,7 @@ class Mproducttabs extends Module
             if(!empty(Tools::getValue($field))) {
                 $tab = new Tabs();
                 $tab->name = Tools::getValue($field);
+                $tab->position = Tabs::count();
                 $tab->add();     
             }
 
@@ -295,10 +297,10 @@ class Mproducttabs extends Module
     */
     public function hookBackOfficeHeader()
     {
-        if (Tools::getValue('module_name') == $this->name) {
-            $this->context->controller->addJS($this->_path.'views/js/back.js');
-            $this->context->controller->addCSS($this->_path.'views/css/back.css');
-        }
+
+        // $this->context->controller->addJqueryUI('ui.sortable');
+        // $this->context->controller->addJS($this->_path.'views/js/back.js');
+
     }
 
     /**
@@ -383,68 +385,87 @@ class Mproducttabs extends Module
 
     }
 
-    public function getProductTabsGroups($id_product) {
+    public function hookDisplayFooterProduct()
+    {
+        /* Place your code here. */
+    }
 
-       $tabs = (object)Tabs::getProductTabs((int)$id_product);
+    public function hookProductTabs($params)
+    {
 
-       foreach ($tabs as &$tab) {
+        $id_product = (int)$params['id_product'];
+        $tabs = (object)Tabs::getProductTabs((int)$id_product);
 
-        $tab['content'] = TabsContent::getProductTabContent($tab['id'], (int)$id_product);
+        $this->context->smarty->assign('product_tabs', $tabs);
+
+        return $this->context->smarty->fetch($this->local_path.'views/templates/hooks/mproducttabs.tpl');
+    }
+
+    public function tabsList()
+    {
+
+        $tabs = Tabs::all();
+
+        $fields_list = array(
+            'id' => array(
+                'title' => 'ID',
+                'width' => 'auto',
+                'type' => 'text'
+            ),
+            'name' => array(
+                'title' => $this->l('Name'),
+                'width' => 'auto',
+                'type' => 'text'
+            ),
+            'position' => array(
+                'title' => $this->l('Position'),
+                'filter_key' => 'a!position',
+                'position' => 'position',
+                'align' => 'center',
+                'class' => 'fixed-width-md'
+            ),
+        );
+
+        $helper = new HelperList();
+        $helper->shopLinkType = '';
+        $helper->simple_header = true;
+        $helper->identifier = 'id';
+        $helper->position_identifier = 'position';
+        $helper->orderBy = 'position';
+        $helper->orderWay = 'ASC';
+        $helper->actions = array('edit', 'delete');
+        $helper->show_toolbar = false;
+        $helper->table_id = 'module-'.$this->name;
+        $helper->title = $this->displayName;
+        $helper->table = $this->name;
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->currentIndex = AdminController::$currentIndex.'&configure='.$this->name;
+
+        return $helper->generateList($tabs, $fields_list);
 
     }
 
-    return $tabs;
-}
+    public function ajaxProcessUpdatePositions()
+    {
+        $positions = Tools::getValue('module-mproducttabs');
 
-public function hookDisplayFooterProduct()
-{
-    /* Place your code here. */
-}
+        if (!is_array($positions))
+            return false;
+        
+        foreach ($positions as $position => $value) {
+            
+            $pos = explode('_', $value);
 
-public function hookProductTabs($params)
-{
+            Tabs::updatePosition($pos[2], $position);
 
-    $id_product = (int)$params['id_product'];
+        }
 
-    $tabs = $this->getProductTabsGroups($id_product);
+        return Tools::jsonEncode([
+            'status' => true
+        ]);
+        
+    }
 
-    $this->context->smarty->assign('product_tabs', $tabs);
-
-    return $this->context->smarty->fetch($this->local_path.'views/templates/hooks/mproducttabs.tpl');
-}
-
-public function tabsList()
-{
-
-    $tabs = Tabs::all();
-
-    $fields_list = array(
-        'id' => array(
-            'title' => 'ID',
-            'width' => 'auto',
-            'type' => 'text'
-        ),
-        'name' => array(
-            'title' => $this->l('Name'),
-            'width' => 'auto',
-            'type' => 'text'
-        )
-    );
-
-    $helper = new HelperList();
-    $helper->shopLinkType = '';
-    $helper->simple_header = true;
-    $helper->identifier = 'id';
-    $helper->actions = array('edit', 'delete');
-    $helper->show_toolbar = false;
-    $helper->title = $this->displayName;
-    $helper->table = $this->name;
-    $helper->token = Tools::getAdminTokenLite('AdminModules');
-    $helper->currentIndex = AdminController::$currentIndex.'&configure='.$this->name;
-
-    return $helper->generateList($tabs, $fields_list);
-
-}
 
     /**
      * Create the form that will be displayed in the configuration of your module.
@@ -552,6 +573,7 @@ public function tabsList()
             if(!$pts_tabs_active) {
 
                 foreach ($pts_tabs as $pts_tab) {
+
                     if(!empty($pts_tab['name'])) {
                         $tab = new Tabs();
                         $tab->name = $pts_tab['name'];
@@ -572,7 +594,7 @@ public function tabsList()
 
                 if($offset <= $totalTabs ) {
 
-                    if(!empty($pts_tab_content['content']) && Tabs::getTabIdByName($pts_tab_content['name'])) {
+                    if(!empty($pts_tab_content['content'])) {
                         $tabsContent = new TabsContent();
                         $tabsContent->id_tab = (int)Tabs::getTabIdByName($pts_tab_content['name']);
                         $tabsContent->id_product = $pts_tab_content['id_product'];

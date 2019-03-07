@@ -45,11 +45,6 @@ class TabsContent extends ObjectModel
         return true;
     }
 
-    public static function getProductTabContent($id_tab, $id_product) {
-
-        return Db::getInstance()->getValue('SELECT content FROM `' . _DB_PREFIX_ . 'mproducttabs_content` WHERE id_tab ='.(int)$id_tab.' AND id_product = '.(int)$id_product);
-    }
-
     public static function getTabContent($id_tab, $id_product) 
     {
 

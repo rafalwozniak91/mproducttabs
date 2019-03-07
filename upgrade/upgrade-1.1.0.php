@@ -39,5 +39,7 @@ function upgrade_module_1_1_0($module)
      * You could add a column in one of your module's tables
      */
 
+    $res = Db::getInstance()->execute('ALTER TABLE `'._DB_PREFIX_.'mproducttabs` ADD `position` int(10) DEFAULT 0');
+
     return true;
 }
