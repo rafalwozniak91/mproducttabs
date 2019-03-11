@@ -297,10 +297,7 @@ class Mproducttabs extends Module
     */
     public function hookBackOfficeHeader()
     {
-
-        // $this->context->controller->addJqueryUI('ui.sortable');
-        // $this->context->controller->addJS($this->_path.'views/js/back.js');
-
+        $this->context->controller->addJS($this->_path.'views/js/back/mproducttabs.js');
     }
 
     /**
@@ -362,6 +359,7 @@ class Mproducttabs extends Module
                     $tabContent->id_product = $id_product;
                     $tabContent->content = $contents[$tab_id];
                     $tabContent->add();
+                    $methods[$tab_id] = 'update';
 
                     break;
 
@@ -577,7 +575,6 @@ class Mproducttabs extends Module
                     if(!empty($pts_tab['name'])) {
                         $tab = new Tabs();
                         $tab->name = $pts_tab['name'];
-                        $tab->position = Tabs::count();
                         $tab->add();  
                     }
                 }
