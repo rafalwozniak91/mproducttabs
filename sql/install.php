@@ -37,6 +37,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mproducttabs_content` (
     `id_tab` int(10) unsigned NOT NULL,
     `id_product` int(10) unsigned NOT NULL,
     `content` text NOT NULL,
+    `is_open` int(10) DEFAULT 0,
     PRIMARY KEY  (`id`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 

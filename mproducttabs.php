@@ -39,7 +39,7 @@ class Mproducttabs extends Module
     {
         $this->name = 'mproducttabs';
         $this->tab = 'front_office_features';
-        $this->version = '1.1.0';
+        $this->version = '1.2.0';
         $this->author = 'Rafał Woźniak';
         $this->need_instance = 1;
 
@@ -323,6 +323,7 @@ class Mproducttabs extends Module
 
             $tab['id_tab_content'] =  $tabContent['id_tab_content'];
             $tab['content'] =  $tabContent['content'];
+            $tab['is_open'] = $tabContent['is_open'];
         }
 
         $this->context->smarty->assign([
@@ -343,6 +344,7 @@ class Mproducttabs extends Module
         $contents = Tools::getValue('content');
         $methods = Tools::getValue('method');
         $id_tabs_content = Tools::getValue('id_tab_content');
+        $is_open = Tools::getValue('is_open');
 
         $id_product = $params['id_product'];
 
@@ -358,6 +360,7 @@ class Mproducttabs extends Module
                     $tabContent->id_tab = (int)$tab_id;
                     $tabContent->id_product = $id_product;
                     $tabContent->content = $contents[$tab_id];
+                    $tabContent->is_open = $is_open ? (int)array_key_exists($tab_id, $is_open) : 0;
                     $tabContent->add();
                     $methods[$tab_id] = 'update';
 
@@ -367,6 +370,7 @@ class Mproducttabs extends Module
 
                     $tabContent = new TabsContent((int)$id_tabs_content[$tab_id]);
                     $tabContent->content = $contents[$tab_id];
+                    $tabContent->is_open = $is_open ? (int)array_key_exists($tab_id, $is_open) : 0;
                     $tabContent->save();
 
                     break;
@@ -598,6 +602,7 @@ class Mproducttabs extends Module
                         $tabsContent->id_tab = (int)Tabs::getTabIdByName($pts_tab_content['name']);
                         $tabsContent->id_product = $pts_tab_content['id_product'];
                         $tabsContent->content = $pts_tab_content['content'];
+                        $tabContent->is_open = 0;
 
                         if($tabsContent->add()) {
                             Configuration::updateValue('MPRODUCTS_PTS_OFFSET_LIMIT', Configuration::get('MPRODUCTS_PTS_OFFSET_LIMIT')+1);

@@ -58,7 +58,7 @@ class Tabs extends ObjectModel
 
     public static function getProductTabs($id_product) {
 
-        $sql = 'SELECT pt.id, pt.name, ptc.content FROM `' . _DB_PREFIX_ . 'mproducttabs` pt
+        $sql = 'SELECT pt.id, pt.name, ptc.content, ptc.is_open FROM `' . _DB_PREFIX_ . 'mproducttabs` pt
         LEFT JOIN `' . _DB_PREFIX_ . 'mproducttabs_content` ptc ON (pt.id = ptc.id_tab)
         WHERE ptc.id_product =' . (int)$id_product . ' ORDER BY pt.position ASC';
 

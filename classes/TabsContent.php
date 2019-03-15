@@ -5,6 +5,7 @@ class TabsContent extends ObjectModel
 	public $id_tab;
     public $id_product;
     public $content;
+    public $is_open;
 
 	/**
 	 * @see ObjectModel::$definition
@@ -13,12 +14,13 @@ class TabsContent extends ObjectModel
 		'table' => 'mproducttabs_content',
 		'primary' => 'id',
 		'fields' => array(
-			'id_tab' =>  	array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
+			'id_tab' =>  	   array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
             'id_product' =>    array('type' => self::TYPE_INT, 'validate' => 'isUnsignedId'),
-            'content' =>			array('type' => self::TYPE_HTML, 'validate' => 'isCleanHtml', 'required' => true),
+            'content' =>	   array('type' => self::TYPE_HTML, 'validate' => 'isCleanHtml', 'required' => true),
+            'is_open' =>       array('type' => self::TYPE_INT, 'validate' => 'isBool', 'required' => true),
         ),
         'associations' => array(
-            'tab' =>  array('type' => self::HAS_ONE, 'field' => 'id_tab', 'object' => 'Tabs'),
+            'tab' =>    array('type' => self::HAS_ONE, 'field' => 'id_tab', 'object' => 'Tabs'),
         ),
     );
 
@@ -48,7 +50,7 @@ class TabsContent extends ObjectModel
     public static function getTabContent($id_tab, $id_product) 
     {
 
-        return Db::getInstance()->getRow('SELECT content, id as id_tab_content FROM `' . _DB_PREFIX_ . 'mproducttabs_content` WHERE id_tab ='.(int)$id_tab.' AND id_product = '.(int)$id_product);
+        return Db::getInstance()->getRow('SELECT content, id as id_tab_content, is_open FROM `' . _DB_PREFIX_ . 'mproducttabs_content` WHERE id_tab ='.(int)$id_tab.' AND id_product = '.(int)$id_product);
 
     }
 

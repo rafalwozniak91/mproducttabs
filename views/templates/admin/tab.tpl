@@ -4,7 +4,6 @@
 		{l s='Product tabs' mod='mproducttabs'}
 	</div>
 
-
 	<div class="tabs">
 
 		{foreach from=$productTabs item=tab}
@@ -20,8 +19,13 @@
 			{/if}
 
 			<div class="col-md-12 col-xs-12">
-				<label for="tab_{$tab.id}" class="col-md-2">{$tab.name}</label>
+				<label for="tab_{$tab.id}" class="col-md-3">{$tab.name}</label>
 				<input type="checkbox" class="tab-toggle col-md-1" name="tab[{$tab.id}]" id="tab_{$tab.id}" value="{$tab.id}"{if $tab.content} checked{/if}/>
+			</div>
+
+			<div class="col-md-12 col-xs-12">
+				<label for="is_open_{$tab.id}" class="col-md-3">{l s='Leave this tab opened' mod="mproducttabs"}</label>
+				<input type="checkbox" class="col-md-1" name="is_open[{$tab.id}]" id="is_open_{$tab.id}" value="1"{if $tab.is_open} checked{/if}/>
 			</div>
 
 			<div class="col-md-9 col-xs-12{if !$tab.content} hidden{/if}">
