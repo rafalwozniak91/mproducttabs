@@ -39,7 +39,7 @@ class Mproducttabs extends Module
     {
         $this->name = 'mproducttabs';
         $this->tab = 'front_office_features';
-        $this->version = '1.2.0';
+        $this->version = '1.2.1';
         $this->author = 'Rafał Woźniak';
         $this->need_instance = 1;
 
@@ -342,7 +342,6 @@ class Mproducttabs extends Module
         $id_tabs = Tools::getValue('id_tabs');
 
         $contents = Tools::getValue('content');
-        $methods = Tools::getValue('method');
         $id_tabs_content = Tools::getValue('id_tab_content');
         $is_open = Tools::getValue('is_open');
 
@@ -353,27 +352,21 @@ class Mproducttabs extends Module
             if(!empty($contents[$tab_id]) && isset($tabs[$tab_id]))
             {
 
-                switch ($methods[$tab_id]) {
-
-                    case 'add':
-                    $tabContent = new TabsContent();
-                    $tabContent->id_tab = (int)$tab_id;
-                    $tabContent->id_product = $id_product;
-                    $tabContent->content = $contents[$tab_id];
-                    $tabContent->is_open = $is_open ? (int)array_key_exists($tab_id, $is_open) : 0;
-                    $tabContent->add();
-                    $methods[$tab_id] = 'update';
-
-                    break;
-
-                    case 'update':
+                if(TabsContent::getTabContent($tab_id, $id_product)) {
 
                     $tabContent = new TabsContent((int)$id_tabs_content[$tab_id]);
                     $tabContent->content = $contents[$tab_id];
                     $tabContent->is_open = $is_open ? (int)array_key_exists($tab_id, $is_open) : 0;
                     $tabContent->save();
 
-                    break;
+                } else {
+
+                    $tabContent = new TabsContent();
+                    $tabContent->id_tab = (int)$tab_id;
+                    $tabContent->id_product = $id_product;
+                    $tabContent->content = $contents[$tab_id];
+                    $tabContent->is_open = $is_open ? (int)array_key_exists($tab_id, $is_open) : 0;
+                    $tabContent->add(); 
                 }
 
             } else {
@@ -384,7 +377,6 @@ class Mproducttabs extends Module
             }
 
         }
-
     }
 
     public function hookDisplayFooterProduct()

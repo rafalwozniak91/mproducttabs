@@ -12,7 +12,6 @@
 
 		<div class="row">
 			<input type="hidden" name="id_tabs[{$tab.id}]" value="{$tab.id}"/>
-			<input type="hidden" name="method[{$tab.id}]" value="{if $tab.content}update{else}add{/if}"/>
 			
 			{if $tab.content} 
 				<input type="hidden" name="id_tab_content[{$tab.id}]" value="{$tab.id_tab_content}"/>
